@@ -4,24 +4,52 @@ A FastAPI backend service for image upload and mock AI-style analysis. Built wit
 
 ## Quick Start
 
-### Prerequisites
+### Option 1: Local Development
+
+#### Prerequisites
 
 - Python 3.10+
 - pip
 
-### Installation
+#### Installation
 
 1. Install dependencies:
 ```bash
-pip install fastapi uvicorn python-multipart
+pip install -r requirements.txt
 ```
 
 2. Run the service:
 ```bash
-uvicorn app.main:app --reload
+python -m uvicorn app.main:app --reload
 ```
 
 The service will be available at `http://localhost:8000`
+
+### Option 2: Docker
+
+#### Prerequisites
+
+- Docker installed and running
+
+#### Build and Run
+
+1. Build the Docker image:
+```bash
+docker build -t image-analysis-service .
+```
+
+2. Run the container:
+```bash
+docker run -p 8000:8000 image-analysis-service
+```
+
+The service will be available at `http://localhost:8000`
+
+#### Docker with Volume Mounts (for persistent data)
+
+```bash
+docker run -p 8000:8000 -v $(pwd)/data:/app/data image-analysis-service
+```
 
 ### API Documentation
 
@@ -156,6 +184,25 @@ data/
 └── analysis/               # Cached analysis results
 ```
 
+## Logging
+
+The service includes structured logging for:
+- HTTP requests (method, path, status code)
+- Image uploads (image_id, file size, MIME type)
+- Analysis operations (image_id, cached vs. new)
+- Errors with context (operation, error message, image_id when applicable)
+
+Logs are output to stdout in the format:
+```
+YYYY-MM-DD HH:MM:SS - logger_name - LEVEL - message
+```
+
+Log levels:
+- **INFO**: Normal operations (uploads, analysis, requests)
+- **WARNING**: Validation failures, missing resources
+- **ERROR**: Exceptions and errors
+- **DEBUG**: Detailed operation information
+
 ## Assumptions
 
 1. **Local development**: Service runs on localhost with CORS enabled for all origins
@@ -164,6 +211,7 @@ data/
 4. **No database**: Filesystem storage is sufficient for this scope
 5. **Mock analysis**: Analysis results are deterministic pseudo-random based on image_id hash
 6. **Single instance**: Not designed for horizontal scaling without shared storage
+7. **Logging**: Structured logging to stdout (can be redirected to files or log aggregation services)
 
 ## Production Improvements
 
@@ -220,10 +268,10 @@ For a production deployment, consider:
    - Error code reference
 
 10. **DevOps**
-    - Docker containerization
+    - ✅ Docker containerization (included)
     - CI/CD pipeline
     - Environment-specific configurations
-    - Health checks and readiness probes
+    - ✅ Health checks (included in Dockerfile)
 
 ## License
 

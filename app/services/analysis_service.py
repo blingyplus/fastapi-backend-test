@@ -5,6 +5,7 @@ import random
 
 from app.services.exceptions import ImageNotFoundError
 from app.utils.file_storage import image_exists, load_analysis_result, save_analysis_result
+from app.utils.logger import log_analysis, logger
 
 # Mock analysis data
 SKIN_TYPES = ["Oily", "Dry", "Combination", "Normal"]
@@ -63,17 +64,22 @@ def analyze_image(image_id: str) -> dict:
     # Check if analysis result already exists (idempotency)
     cached_result = load_analysis_result(image_id)
     if cached_result is not None:
+        log_analysis(image_id, cached=True)
         return cached_result
 
     # Verify image exists
     if not image_exists(image_id):
+        logger.warning(f"Analysis requested for non-existent image: {image_id}")
         raise ImageNotFoundError(f"Image with ID {image_id} not found")
 
     # Generate deterministic analysis
+    logger.debug(f"Generating analysis for image_id: {image_id}")
     result = _generate_deterministic_analysis(image_id)
 
     # Save result for future idempotent calls
     save_analysis_result(image_id, result)
+    logger.debug(f"Analysis result saved for image_id: {image_id}")
 
+    log_analysis(image_id, cached=False)
     return result
 

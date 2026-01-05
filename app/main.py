@@ -6,12 +6,15 @@ from fastapi.responses import JSONResponse
 
 from app.models.schemas import ErrorResponse
 from app.routes import analyze, upload
+from app.utils.logger import logger
 
 app = FastAPI(
     title="Image Analysis Service",
     description="A FastAPI service for image upload and AI-style analysis",
     version="1.0.0",
 )
+
+logger.info("Starting Image Analysis Service")
 
 # CORS middleware for local development
 app.add_middleware(
@@ -36,6 +39,7 @@ async def health_check():
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     """Global exception handler for consistent error responses."""
+    logger.error(f"Unhandled exception: {type(exc).__name__} - {str(exc)}", exc_info=True)
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={"error": "Internal server error", "detail": str(exc)},
